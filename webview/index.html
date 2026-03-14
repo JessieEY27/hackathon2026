@@ -8,31 +8,35 @@
     <h1>CODE EXPLAINER</h1>
     <div class="container">
       <div class="input">
-        <textarea placeholder="Paste your code here"></textarea>
-
-        <label for="range-start"
-          ><p>Or select range of lines to explain:</p></label
-        ><br />
-        <p>Line Start:</p>
-        <input type="number" id="range-start" value="1" min="1" max="1000" />
-        <p>Line End:</p>
-        <input type="number" id="range-end" value="5" min="1" max="1000" />
-        <button id="clearbutton">CLEAR MY CODE</button>
+        <textarea id="codeinput" placeholder="Selected code here"></textarea>
       </div>
+
       <div class="explaining">
-        <label for="explanationlength"
-          ><p>Choose an explanation length</p></label
-        >
+        <label for="range-start">Or select range of lines to explain:</label>
+
+        Line Start:
+        <input type="number" id="range-start" value="1" min="1" max="100000" />
+
+        Line End:
+        <input type="number" id="range-end" value="1" min="1" max="100000" />
+        <button id="explainbutton">EXPLAIN MY CODE</button>
+        <label for="length">Choose an explanation length</label>
         <select name="length" id="length">
           <option value="short">Short</option>
           <option value="medium">Medium</option>
           <option value="long">Long</option>
         </select>
-        <button id="explainbutton">EXPLAIN MY CODE</button>
-        <textarea placeholder="Here is the explanation..."></textarea>
+        <button id="eli5button">EXPLAIN LIKE I'M 5</button>
+
+        <textarea
+          id="output"
+          placeholder="Here is the explanation..."
+        ></textarea>
+
         <button id="copybutton">COPY TO CLIPBOARD</button>
       </div>
     </div>
+
     <script src="script.js"></script>
   </body>
 </html>
