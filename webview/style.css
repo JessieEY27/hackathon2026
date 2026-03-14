@@ -1,0 +1,30 @@
+body {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  background-color: lavender;
+  color: plum;
+}
+
+h1 {
+  font-style: oblique;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.explaining {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#explainbutton {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  background-color: #cbc3e3;
+}
+
+#explainbutton:hover {
+  background-color: #aa98a9;
+}
