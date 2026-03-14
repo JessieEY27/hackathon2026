@@ -5,17 +5,24 @@ const CHAT_COMPLETIONS_PATH = '/chat/completions';
 const REQUEST_TIMEOUT_MS = 15000;
 
 // Build the prompt Groq will follow
-function buildUserPrompt(code, language, mode) {
+function buildUserPrompt(code, language, mode, length) {
   const lang = language || 'code';
   const styleLine = mode === 'eli5'
     ? 'Write like you are explaining to a 5-year-old using simple words.'
     : 'Write for a junior developer in plain English with minimal jargon.';
 
+  const lengthLine = length === 'short'
+    ? 'Keep it very short: 2-3 sentences.'
+    : length === 'long'
+      ? 'Be detailed but clear: 6-10 sentences.'
+      : 'Keep it concise: 3-5 sentences.';
+
   return [
     `Explain the following ${lang} code in plain English.`,
     styleLine,
+    lengthLine,
     'Return plain text only. Use exactly this format:',
-    'Explanation: <3-5 short sentences>',
+    'Explanation: <sentences>',
     'Bugs: <None> or a short sentence describing potential issues/edge cases>',
     '',
     code
@@ -23,7 +30,7 @@ function buildUserPrompt(code, language, mode) {
 }
 
 // Main entry for the server to call Groq
-async function explainWithGroq({ apiKey, model, temperature, maxTokens, selectedCode, language, mode }) {
+async function explainWithGroq({ apiKey, model, temperature, maxTokens, selectedCode, language, mode, length }) {
   if (!apiKey) {
     throw new Error('Missing Groq API key.');
   }
@@ -37,7 +44,7 @@ async function explainWithGroq({ apiKey, model, temperature, maxTokens, selected
       },
       {
         role: 'user',
-        content: buildUserPrompt(selectedCode, language, mode)
+        content: buildUserPrompt(selectedCode, language, mode, length)
       }
     ],
     temperature,
