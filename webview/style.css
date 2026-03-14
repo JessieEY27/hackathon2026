@@ -1,5 +1,6 @@
 body {
   background-color: lavender;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 }
 
 h1 {
@@ -8,13 +9,21 @@ h1 {
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
 }
 
-p {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 14px;
+  border-radius: 4px;
+  resize: vertical;
+  box-sizing: border-box;
 }
 
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 40px;
 }
 
 .explaining {
