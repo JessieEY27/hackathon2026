@@ -2,12 +2,14 @@ const https = require('https');
 
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 const CHAT_COMPLETIONS_PATH = '/chat/completions';
+const REQUEST_TIMEOUT_MS = 15000;
 
+// Build the prompt Groq will follow
 function buildUserPrompt(code, language, mode) {
   const lang = language || 'code';
   const styleLine = mode === 'eli5'
     ? 'Write like you are explaining to a 5-year-old using simple words.'
-    : 'Write for a developer audience in plain English.';
+    : 'Write for a junior developer in plain English with minimal jargon.';
 
   return [
     `Explain the following ${lang} code in plain English.`,
@@ -20,6 +22,7 @@ function buildUserPrompt(code, language, mode) {
   ].join('\n');
 }
 
+// Main entry for the server to call Groq
 async function explainWithGroq({ apiKey, model, temperature, maxTokens, selectedCode, language, mode }) {
   if (!apiKey) {
     throw new Error('Missing Groq API key.');
@@ -54,6 +57,7 @@ async function explainWithGroq({ apiKey, model, temperature, maxTokens, selected
   return content.trim().replace(/\s+/g, ' ');
 }
 
+// Low-level POST helper with timeout + JSON validation
 function postJson(url, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
@@ -91,6 +95,10 @@ function postJson(url, body, headers) {
         });
       }
     );
+
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      req.destroy(new Error('Groq request timed out.'));
+    });
 
     req.on('error', (err) => {
       reject(err);
