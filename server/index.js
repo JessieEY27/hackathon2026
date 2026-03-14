@@ -14,6 +14,7 @@ app.use(express.json({ limit: '1mb' }));
 // Basic guardrails for input validation
 const DISALLOWED_LANGUAGES = new Set(['plaintext', 'text', 'markdown']);
 const MAX_CODE_CHARS = 20000;
+const ALLOWED_LENGTHS = new Set(['short', 'medium', 'long']);
 
 // Quick heuristic to block empty/gibberish input
 function looksLikeCode(text) {
@@ -51,7 +52,7 @@ app.get('/health', (req, res) => {
 
 app.post('/explain', async (req, res) => {
   try {
-    const { selectedCode, language, mode } = req.body || {};
+    const { selectedCode, language, mode, length } = req.body || {};
 
     if (!selectedCode || typeof selectedCode !== 'string' || !selectedCode.trim()) {
       errorResponse(res, 400, 'MISSING_CODE', 'selectedCode is required.');
@@ -84,6 +85,11 @@ app.post('/explain', async (req, res) => {
       return;
     }
 
+    if (length && !ALLOWED_LENGTHS.has(length)) {
+      errorResponse(res, 400, 'INVALID_LENGTH', 'length must be short, medium, or long if provided.');
+      return;
+    }
+
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       errorResponse(res, 500, 'MISSING_API_KEY', 'Server missing GROQ_API_KEY.');
@@ -94,7 +100,7 @@ app.post('/explain', async (req, res) => {
     const temperature = process.env.GROQ_TEMPERATURE ? Number(process.env.GROQ_TEMPERATURE) : 0.2;
     const maxTokens = process.env.GROQ_MAX_TOKENS ? Number(process.env.GROQ_MAX_TOKENS) : 512;
 
-    // Goes to groqClient.js for Groq prompt and validates Groq response
+    // goes to groqClient.js for Groq prompt and validates Groq response
     const explanation = await explainWithGroq({
       apiKey,
       model,
@@ -102,7 +108,8 @@ app.post('/explain', async (req, res) => {
       maxTokens,
       selectedCode,
       language,
-      mode
+      mode,
+      length
     });
 
     res.json({ explanation });
