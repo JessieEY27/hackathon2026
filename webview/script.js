@@ -1,6 +1,6 @@
 const vscode = acquireVsCodeApi();
 
-document.getElementById("explain").addEventListener("click", () => {
+document.getElementById("explainbutton").addEventListener("click", () => {
   vscode.postMessage({
     command: "explainCode",
   });
