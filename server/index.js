@@ -39,11 +39,15 @@ app.post("/explain", async (req, res) => {
       return res.status(400).json({ error: "selectedCode is required." });
     }
 
-    if (mode && mode !== "eli5") {
-      return res
-        .status(400)
-        .json({ error: 'mode must be "eli5" if provided.' });
+    const allowedModes = ["selection", "file", "eli5"];
+
+    if (mode && !allowedModes.includes(mode)) {
+      return res.status(400).json({
+        error: 'mode must be one of: "selection", "file", or "eli5".'
+      });
     }
+
+    const finalMode = mode || "selection";
 
     const apiKey = process.env.GROQ_API_KEY;
     console.log("GROQ key loaded?", !!apiKey);
@@ -58,12 +62,13 @@ app.post("/explain", async (req, res) => {
       : 0.2;
     const maxTokens = process.env.GROQ_MAX_TOKENS
       ? Number(process.env.GROQ_MAX_TOKENS)
-      : 512;
+      : 700;
 
     console.log("Calling Groq with:");
     console.log("model:", model);
     console.log("temperature:", temperature);
     console.log("maxTokens:", maxTokens);
+    console.log("finalMode:", finalMode);
 
     const explanation = await explainWithGroq({
       apiKey,
@@ -72,7 +77,7 @@ app.post("/explain", async (req, res) => {
       maxTokens,
       selectedCode,
       language,
-      mode,
+      mode: finalMode,
     });
 
     return res.json({ explanation });
