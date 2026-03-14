@@ -1,29 +1,32 @@
 {
   "name": "code-explainer",
-  "displayName": "code-explainer",
+  "displayName": "Code Explainer",
   "description": "Explain highlighted code using AI",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.110.0"
+    "vscode": "^1.99.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:code-explainer.explainCode"
+  ],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "code-explainer.helloWorld",
-      "title": "Hello World"
-    }]
+    "commands": [
+      {
+        "command": "code-explainer.explainCode",
+        "title": "Code Explainer: Explain Selected Code"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
-    "pretest": "npm run lint",
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.110.0",
+    "@types/vscode": "^1.99.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "eslint": "^9.39.3",
