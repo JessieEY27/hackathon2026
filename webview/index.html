@@ -6,14 +6,31 @@
   </head>
   <body>
     <h1>CODE EXPLAINER</h1>
-    <label for="languagebutton"></label>
     <div class="container">
       <div class="input">
         <textarea placeholder="Paste your code here"></textarea>
+
+        <label for="range-start"
+          ><p>Or select range of lines to explain:</p></label
+        ><br />
+        <p>Line Start:</p>
+        <input type="number" id="range-start" value="1" min="1" max="1000" />
+        <p>Line End:</p>
+        <input type="number" id="range-end" value="5" min="1" max="1000" />
+        <button id="clearbutton">CLEAR MY CODE</button>
       </div>
       <div class="explaining">
+        <label for="explanationlength"
+          ><p>Choose an explanation length</p></label
+        >
+        <select name="length" id="length">
+          <option value="short">Short</option>
+          <option value="medium">Medium</option>
+          <option value="long">Long</option>
+        </select>
         <button id="explainbutton">EXPLAIN MY CODE</button>
         <textarea placeholder="Here is the explanation..."></textarea>
+        <button id="copybutton">COPY TO CLIPBOARD</button>
       </div>
     </div>
     <script src="script.js"></script>
