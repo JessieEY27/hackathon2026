@@ -1,11 +1,15 @@
 body {
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   background-color: lavender;
-  color: plum;
 }
 
 h1 {
   font-style: oblique;
+  color: plum;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+}
+
+p {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 }
 
 .container {
@@ -26,5 +30,23 @@ h1 {
 }
 
 #explainbutton:hover {
+  background-color: #aa98a9;
+}
+
+#clearbutton {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  background-color: #cbc3e3;
+}
+
+#clearbutton:hover {
+  background-color: #aa98a9;
+}
+
+#copybutton {
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  background-color: #cbc3e3;
+}
+
+#copybutton:hover {
   background-color: #aa98a9;
 }

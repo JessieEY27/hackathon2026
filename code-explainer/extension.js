@@ -29,7 +29,7 @@ function activate(context) {
       );
 
       panel.webview.html = fs.readFileSync(htmlPath, "utf8");
-    }, // <-- no comma here
+    },
   );
 
   context.subscriptions.push(disposable);
