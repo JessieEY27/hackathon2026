@@ -17,7 +17,7 @@
     "commands": [
       {
         "command": "code-explainer.explainCode",
-        "title": "Code Explainer: Explain Selected Code"
+        "title": "Code Explainer: Explain Code"
       }
     ]
   },
