@@ -19,17 +19,27 @@ function activate(context) {
         return;
       }
 
-      const selectedCode = editor.document.getText(editor.selection);
+      const selection = editor.selection;
+      const selectedCode = editor.document.getText(selection);
 
       if (!selectedCode || selectedCode.trim() === "") {
         vscode.window.showWarningMessage("Please highlight some code first.");
         return;
       }
 
+      const fullFileCode = editor.document.getText();
+      const selectionStart = selection.start.line + 1;
+      let selectionEnd = selection.end.line + 1;
+      if (selection.end.character === 0 && selection.end.line > selection.start.line) {
+        selectionEnd -= 1;
+      }
+
       openExplainerPanel(context, {
-        code: selectedCode,
+        code: fullFileCode,
         language: editor.document.languageId,
-        title: "Code Explanation - Selection"
+        title: "Code Explanation - Selection",
+        startLine: selectionStart,
+        endLine: selectionEnd
       });
     }
   );
@@ -54,7 +64,9 @@ function activate(context) {
       openExplainerPanel(context, {
         code: fileContent,
         language: editor.document.languageId,
-        title: "Code Explanation - File"
+        title: "Code Explanation - File",
+        startLine: 1,
+        endLine: editor.document.lineCount
       });
     }
   );
@@ -65,7 +77,7 @@ function activate(context) {
 /**
  * Create and show the explainer webview
  * @param {vscode.ExtensionContext} context
- * @param {{code: string, language: string, title: string}} options
+ * @param {{code: string, language: string, title: string, startLine?: number, endLine?: number}} options
  */
 function openExplainerPanel(context, options) {
   const panel = vscode.window.createWebviewPanel(
@@ -84,7 +96,9 @@ function openExplainerPanel(context, options) {
 
   panel.webview.postMessage({
     command: "updateCode",
-    code: options.code
+    code: options.code,
+    startLine: options.startLine,
+    endLine: options.endLine
   });
 
   panel.webview.onDidReceiveMessage(async (message) => {

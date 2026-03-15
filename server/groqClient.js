@@ -14,8 +14,8 @@ function buildUserPrompt(code, language, mode, length) {
   const lengthLine = length === 'short'
     ? 'Keep it very short: 2-3 sentences.'
     : length === 'long'
-      ? 'Be detailed but clear: 6-10 sentences.'
-      : 'Keep it concise: 3-5 sentences.';
+      ? 'Be detailed but clear: 7-10 sentences.'
+      : 'Keep it concise: 4-6 sentences.';
 
   return [
     `Explain the following ${lang} code in plain English.`,
