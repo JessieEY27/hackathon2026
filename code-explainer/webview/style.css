@@ -26,6 +26,11 @@ textarea {
   resize: vertical;
 }
 
+#codeinput {
+  min-height: 180px;
+  background-color: #f7f3ff;
+}
+
 .container {
   display: flex;
   justify-content: center;
