@@ -1,6 +1,12 @@
+@font-face {
+  font-family: "Source Code Pro";
+  src: url('./fonts/Source_Code_Pro/SourceCodePro-VariableFont_wght.ttf');
+}
+
 body {
   background-color: lavender;
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-family: "Source Code Pro", monospace, "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  letter-spacing: 1px;
   color: #000;
   margin: 0;
   padding: 24px;
@@ -11,16 +17,19 @@ body {
 h1 {
   font-style: oblique;
   color: plum;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family:  Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   text-align: center;
+  letter-spacing: 10px;
 }
+
 
 textarea {
   width: 100%;
   min-height: 300px;
   padding: 10px;
   box-sizing: border-box;
-  font-family: monospace;
+  font-family:  "Source Code Pro", monospace;
+  letter-spacing: 2px;
   font-size: 14px;
   border-radius: 4px;
   resize: vertical;
@@ -45,14 +54,24 @@ textarea {
   position: relative;
 }
 
+.explaining input,
+select {
+  border-radius: 6px;
+}
+
 /* Buttons */
 
 #explainbutton,
 #eli5button,
 #copybutton,
 #explainfilebutton {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-family: "Source Code Pro", monospace, "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  letter-spacing: 6px;
   background-color: #cbc3e3;
+  border-radius: 15px;
+  align-self: center;
+  padding: 6px 30px;
+  min-width: 380px;
 }
 
 #explainbutton:hover,
@@ -60,6 +79,28 @@ textarea {
 #copybutton:hover,
 #explainfilebutton:hover {
   background-color: #aa98a9;
+}
+
+
+
+/* Text Boxes */
+
+#output {
+  min-height: 500px;
+  border-radius: 15px;
+}
+
+#codeinput {
+  min-height: 280px;
+  border-radius: 15px;
+}
+
+#length,
+#range-start,
+#range-end {
+  font-family: "Source Code Pro", monospace;
+  letter-spacing: 1px;
+  
 }
 
 /* -------------------------- */
