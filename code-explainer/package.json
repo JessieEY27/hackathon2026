@@ -1,7 +1,7 @@
 {
   "name": "code-explainer",
   "displayName": "Code Explainer",
-  "description": "Explain highlighted code using AI",
+  "description": "Explain highlighted code or entire files using AI",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.99.0"
@@ -10,14 +10,19 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:code-explainer.explainCode"
+    "onCommand:code-explainer.explainCode",
+    "onCommand:code-explainer.explainFile"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
         "command": "code-explainer.explainCode",
-        "title": "Code Explainer: Explain Selected Code"
+        "title": "Code Explainer: Explain Code"
+      },
+      {
+        "command": "code-explainer.explainFile",
+        "title": "Code Explainer: Explain File"
       }
     ]
   },
