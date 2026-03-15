@@ -148,7 +148,9 @@ function openExplainerPanel(context, options) {
           code: slicedCode,
           language: options.language,
           mode,
-          length
+          length,
+          lineStart: start,
+          lineCount: Math.max(1, end - start + 1)
         });
 
         panel.webview.postMessage({
@@ -170,7 +172,8 @@ function openExplainerPanel(context, options) {
 
         const explanation = await sendToServer({
           code: buildFileExplanationPrompt(rawCode, options.language),
-          language: options.language
+          language: options.language,
+          isFile: true
         });
 
         panel.webview.postMessage({
@@ -293,7 +296,7 @@ ${code}
 
 /**
  * Send code to backend server
- * @param {{code: string, language?: string, mode?: string, length?: string}} payload
+ * @param {{code: string, language?: string, mode?: string, length?: string, lineStart?: number, lineCount?: number, isFile?: boolean}} payload
  * @returns {Promise<string>}
  */
 async function sendToServer(payload) {
@@ -306,7 +309,10 @@ async function sendToServer(payload) {
       selectedCode: payload.code,
       language: payload.language,
       mode: payload.mode,
-      length: payload.length
+      length: payload.length,
+      lineStart: payload.lineStart,
+      lineCount: payload.lineCount,
+      isFile: payload.isFile
     })
   });
 

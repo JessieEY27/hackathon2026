@@ -93,9 +93,47 @@ window.addEventListener("DOMContentLoaded", () => {
       outputBox.value =
         explanationType === "file"
           ? formatFileExplanation(rawText)
-          : rawText;
+          : formatCodeExplanation(rawText);
     }
   });
+
+  function formatCodeExplanation(text) {
+    if (!text) return "";
+
+    let formatted = text.replace(/\r\n/g, "\n").trim();
+    formatted = formatted.replace(/^Explanation:\s*/i, "Explanation:\n");
+    formatted = formatted.replace(/\s*Key lines:\s*/i, "\n\nKey lines:\n");
+    formatted = formatted.replace(/[ \t]+\n/g, "\n");
+    formatted = formatted.replace(/\n{3,}/g, "\n\n");
+    formatted = dedupeKeyLines(formatted);
+    return formatted.trim();
+  }
+
+  function dedupeKeyLines(text) {
+    const parts = text.split(/\nKey lines:\n/i);
+    if (parts.length < 2) return text;
+
+    const header = parts[0];
+    const lines = parts.slice(1).join("\n").split("\n");
+    const seen = new Set();
+    const kept = [];
+
+    for (const line of lines) {
+      const match = line.match(/^-\s*Line\s+(\d+)\s*:/i);
+      if (!match) {
+        if (line.trim()) kept.push(line);
+        continue;
+      }
+
+      const num = match[1];
+      if (seen.has(num)) continue;
+      seen.add(num);
+      kept.push(line);
+    }
+
+    const keyLinesBlock = kept.filter((l) => l.trim()).join("\n");
+    return `${header}\n\nKey lines:\n${keyLinesBlock}`.trim();
+  }
 
   function formatFileExplanation(text) {
     if (!text) return "";
