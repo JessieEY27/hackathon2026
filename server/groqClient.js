@@ -2,7 +2,9 @@ const https = require('https');
 
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 const CHAT_COMPLETIONS_PATH = '/chat/completions';
-const REQUEST_TIMEOUT_MS = 15000;
+const REQUEST_TIMEOUT_MS = process.env.GROQ_TIMEOUT_MS
+  ? Number(process.env.GROQ_TIMEOUT_MS)
+  : 15000;
 
 // Build the prompt Groq will follow
 function buildUserPrompt(code, language, mode, length) {
@@ -19,11 +21,11 @@ function buildUserPrompt(code, language, mode, length) {
 
   return [
     `Explain the following ${lang} code in plain English.`,
+    `Report any major bugs that exist`,
     styleLine,
     lengthLine,
-    'Return plain text only. Use exactly this format:',
-    'Explanation: <sentences>',
-    'Bugs: <None> or a short sentence describing potential issues/edge cases>',
+    'Return plain text only.',
+    'Start with "Explanation:" and then the sentences.',
     '',
     code
   ].join('\n');

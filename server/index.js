@@ -21,6 +21,9 @@ app.use(express.json({ limit: '1mb' }));
 
 // Input size limit for selected code
 const MAX_CODE_CHARS = 20000;
+const MIN_CODE_CHARS = 5;
+const INVALID_LANGS = new Set(['plaintext', 'text', 'markdown']);
+const GROQ_TIMEOUT_MS = process.env.GROQ_TIMEOUT_MS ? Number(process.env.GROQ_TIMEOUT_MS) : 20000;
 
 // Rate limiting (simple in-memory)
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -82,8 +85,19 @@ app.post('/explain', rateLimit, async (req, res) => {
       return;
     }
 
+    if (!language || typeof language !== 'string' || INVALID_LANGS.has(language.toLowerCase())) {
+      errorResponse(res, 400, 'INVALID_LANGUAGE', 'language must be a supported code language (not plaintext/text/markdown).');
+      return;
+    }
+
     if (selectedCode.length > MAX_CODE_CHARS) {
       errorResponse(res, 413, 'CODE_TOO_LARGE', `selectedCode exceeds ${MAX_CODE_CHARS} characters.`);
+      return;
+    }
+
+    const trimmed = selectedCode.trim();
+    if (trimmed.length < MIN_CODE_CHARS || !/[A-Za-z]/.test(trimmed)) {
+      errorResponse(res, 400, 'NOT_CODE', 'selectedCode does not appear to be code.');
       return;
     }
 
@@ -101,7 +115,7 @@ app.post('/explain', rateLimit, async (req, res) => {
     const temperature = process.env.GROQ_TEMPERATURE ? Number(process.env.GROQ_TEMPERATURE) : 0.2;
     const maxTokens = process.env.GROQ_MAX_TOKENS ? Number(process.env.GROQ_MAX_TOKENS) : 512;
 
-    const explanation = await explainWithGroq({
+    const groqPromise = explainWithGroq({
       apiKey: process.env.GROQ_API_KEY,
       model,
       temperature,
@@ -112,9 +126,21 @@ app.post('/explain', rateLimit, async (req, res) => {
       length
     });
 
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Groq request timed out.'));
+      }, GROQ_TIMEOUT_MS);
+    });
+
+    const explanation = await Promise.race([groqPromise, timeoutPromise]);
+
     res.json({ explanation });
   } catch (err) {
     const message = err && err.message ? err.message : 'Unknown error.';
+    if (message.toLowerCase().includes('timed out')) {
+      errorResponse(res, 504, 'GROQ_TIMEOUT', message);
+      return;
+    }
     errorResponse(res, 500, 'INTERNAL_ERROR', message);
   }
 });
