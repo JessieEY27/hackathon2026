@@ -78,7 +78,7 @@ app.get('/serverstatus', (req, res) => {
 
 app.post('/explain', rateLimit, async (req, res) => {
   try {
-    const { selectedCode, language, mode, length } = req.body || {};
+    const { selectedCode, language, mode, length, lineStart, lineCount, isFile } = req.body || {};
 
     if (!selectedCode || typeof selectedCode !== 'string' || !selectedCode.trim()) {
       errorResponse(res, 400, 'MISSING_CODE', 'selectedCode is required.');
@@ -123,7 +123,10 @@ app.post('/explain', rateLimit, async (req, res) => {
       selectedCode,
       language,
       mode,
-      length
+      length,
+      lineStart: Number.isInteger(lineStart) ? lineStart : undefined,
+      lineCount: Number.isInteger(lineCount) ? lineCount : undefined,
+      isFile: Boolean(isFile)
     });
 
     const timeoutPromise = new Promise((_, reject) => {

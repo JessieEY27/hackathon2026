@@ -2,6 +2,8 @@ const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
 
+let explainerPanel = null;
+
 /**
  * Runs when the extension activates
  * @param {vscode.ExtensionContext} context
@@ -38,7 +40,7 @@ function activate(context) {
         selectionEnd -= 1;
       }
 
-      openExplainerPanel(context, {
+      explainerPanel = openExplainerPanel(context, {
         code: fullFileCode,
         language: editor.document.languageId,
         title: "Code Explanation",
@@ -48,7 +50,38 @@ function activate(context) {
     }
   );
 
-  context.subscriptions.push(explainCodeCommand);
+  const selectionListener = vscode.window.onDidChangeTextEditorSelection(
+    (event) => {
+      if (!explainerPanel) return;
+      if (!event || !event.textEditor) return;
+
+      const editor = event.textEditor;
+      const selection = editor.selection;
+      const selectedCode = editor.document.getText(selection);
+
+      if (!selectedCode || selectedCode.trim() === "") return;
+
+      const fullFileCode = editor.document.getText();
+      const selectionStart = selection.start.line + 1;
+      let selectionEnd = selection.end.line + 1;
+
+      if (
+        selection.end.character === 0 &&
+        selection.end.line > selection.start.line
+      ) {
+        selectionEnd -= 1;
+      }
+
+      explainerPanel.webview.postMessage({
+        command: "updateCode",
+        code: fullFileCode,
+        startLine: selectionStart,
+        endLine: selectionEnd
+      });
+    }
+  );
+
+  context.subscriptions.push(explainCodeCommand, selectionListener);
 }
 
 /**
@@ -57,6 +90,18 @@ function activate(context) {
  * @param {{code: string, language: string, title: string, startLine?: number, endLine?: number}} options
  */
 function openExplainerPanel(context, options) {
+  if (explainerPanel) {
+    explainerPanel.title = options.title;
+    explainerPanel.webview.postMessage({
+      command: "updateCode",
+      code: options.code,
+      startLine: options.startLine,
+      endLine: options.endLine
+    });
+    explainerPanel.reveal(vscode.ViewColumn.Beside);
+    return explainerPanel;
+  }
+
   const panel = vscode.window.createWebviewPanel(
     "codeExplainer",
     options.title,
@@ -103,7 +148,9 @@ function openExplainerPanel(context, options) {
           code: slicedCode,
           language: options.language,
           mode,
-          length
+          length,
+          lineStart: start,
+          lineCount: Math.max(1, end - start + 1)
         });
 
         panel.webview.postMessage({
@@ -125,7 +172,8 @@ function openExplainerPanel(context, options) {
 
         const explanation = await sendToServer({
           code: buildFileExplanationPrompt(rawCode, options.language),
-          language: options.language
+          language: options.language,
+          isFile: true
         });
 
         panel.webview.postMessage({
@@ -148,6 +196,13 @@ function openExplainerPanel(context, options) {
       );
     }
   });
+
+  panel.onDidDispose(() => {
+    explainerPanel = null;
+  });
+
+  explainerPanel = panel;
+  return explainerPanel;
 }
 
 /**
@@ -241,7 +296,7 @@ ${code}
 
 /**
  * Send code to backend server
- * @param {{code: string, language?: string, mode?: string, length?: string}} payload
+ * @param {{code: string, language?: string, mode?: string, length?: string, lineStart?: number, lineCount?: number, isFile?: boolean}} payload
  * @returns {Promise<string>}
  */
 async function sendToServer(payload) {
@@ -254,7 +309,10 @@ async function sendToServer(payload) {
       selectedCode: payload.code,
       language: payload.language,
       mode: payload.mode,
-      length: payload.length
+      length: payload.length,
+      lineStart: payload.lineStart,
+      lineCount: payload.lineCount,
+      isFile: payload.isFile
     })
   });
 

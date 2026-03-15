@@ -7,7 +7,7 @@ const REQUEST_TIMEOUT_MS = process.env.GROQ_TIMEOUT_MS
   : 15000;
 
 // Build the prompt Groq will follow
-function buildUserPrompt(code, language, mode, length) {
+function buildUserPrompt(code, language, mode, length, lineStart, lineCount) {
   const lang = language || 'code';
   const styleLine = mode === 'eli5'
     ? 'Write like you are explaining to a 5-year-old using simple words.'
@@ -19,23 +19,35 @@ function buildUserPrompt(code, language, mode, length) {
       ? 'Be detailed but clear: 7-10 sentences.'
       : 'Keep it concise: 4-6 sentences.';
 
+  const numberedCode = addLineNumbers(code, lineStart);
+  const totalLines = Number.isInteger(lineCount) && lineCount > 0
+    ? lineCount
+    : numberedCode.split(/\r?\n/).length;
+  const keyLineCount = Math.max(1, Math.ceil(totalLines / 5));
+
   return [
     `Explain the following ${lang} code in plain English.`,
-    `Report any major bugs that exist`,
     styleLine,
     lengthLine,
     'Return plain text only.',
     'Start with "Explanation:" and then the sentences.',
+    `After the explanation, add a short section titled "Key lines:" with exactly ${keyLineCount} bullets.`,
+    'Do not repeat the same line number.',
+    'Each bullet should be in the form "Line <number>: <why it matters>".',
     '',
-    code
+    numberedCode
   ].join('\n');
 }
 
 // Main entry for the server to call Groq
-async function explainWithGroq({ apiKey, model, temperature, maxTokens, selectedCode, language, mode, length }) {
+async function explainWithGroq({ apiKey, model, temperature, maxTokens, selectedCode, language, mode, length, lineStart, lineCount, isFile }) {
   if (!apiKey) {
     throw new Error('Missing Groq API key.');
   }
+
+  const userContent = isFile
+    ? selectedCode
+    : buildUserPrompt(selectedCode, language, mode, length, lineStart, lineCount);
 
   const body = {
     model,
@@ -46,7 +58,7 @@ async function explainWithGroq({ apiKey, model, temperature, maxTokens, selected
       },
       {
         role: 'user',
-        content: buildUserPrompt(selectedCode, language, mode, length)
+        content: userContent
       }
     ],
     temperature,
@@ -63,7 +75,15 @@ async function explainWithGroq({ apiKey, model, temperature, maxTokens, selected
     throw new Error('Groq response did not include any content.');
   }
 
-  return content.trim().replace(/\s+/g, ' ');
+  return content.trim();
+}
+
+function addLineNumbers(code, lineStart) {
+  const start = Number.isInteger(lineStart) && lineStart > 0 ? lineStart : 1;
+  const lines = code.split(/\r?\n/);
+  return lines
+    .map((line, idx) => `${start + idx}: ${line}`)
+    .join('\n');
 }
 
 // Low-level POST helper with timeout + JSON validation
