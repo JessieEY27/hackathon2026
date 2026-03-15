@@ -1,11 +1,11 @@
-Code Explainer (AI)
+codesplAIner
 
 Explain highlighted code or line ranges directly inside VS Code using an AI backend.
 
 Features
 
 Explain selected code or entire files
-Choose explanation length (short / medium / long)
+Choose explanation length (quick / standard / detailed)
 “Explain like I’m 5” mode
 Line range inputs with live preview
 Copy explanation to clipboard

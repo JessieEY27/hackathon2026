@@ -3,6 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .logo {
+        font-family: "Courier New", monospace;
+        font-size: 52px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        background: #1a1830;
+        padding: 24px 32px;
+        border-radius: 18px;
+      }
+
+      .light {
+        color: #e8e6ff;
+      }
+      .dim {
+        color: #b8b5e8;
+      }
+
+      .ai-wrapper {
+        display: inline-block;
+        border: 1.5px solid transparent;
+        border-radius: 10px;
+        padding: 2px 8px;
+        margin: 0 4px 0 0;
+        background:
+          linear-gradient(#1a1830, #1a1830) padding-box,
+          linear-gradient(135deg, #7f77dd, #1d9e75) border-box;
+      }
+
+      .ai {
+        background: linear-gradient(135deg, #7f77dd, #1d9e75);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    </style>
+    <title>code explAIner</title>
   </head>
 
   <body>
@@ -13,11 +51,15 @@
           <label for="theme-toggle" class="switch"></label>
         </div>
 
-        <h1>CODE EXPLAINER</h1>
+        <div class="logo">
+          <span class="light">code</span>&nbsp<span class="dim">expl</span
+          ><span class="ai-wrapper"><span class="ai">AI</span></span
+          ><span class="dim">ner</span>
+        </div>
 
         <label for="codeinput">Code to explain (read-only):</label>
         <textarea id="codeinput" readonly></textarea>
-        <br>
+        <br />
         <label for="range-start">Or select range of lines to explain</label>
         <!-- <br> -->
         Line Start:
@@ -25,11 +67,6 @@
 
         Line End:
         <input type="number" id="range-end" value="1" min="1" max="100000" />
-        <br>
-        <button id="explainbutton">EXPLAIN MY CODE</button>
-        <br>
-        <button id="explainfilebutton">EXPLAIN THIS FILE</button>
-        <br>
 
         <label for="length">Choose an explanation type:</label>
         <select name="length" id="length">
@@ -37,14 +74,20 @@
           <option value="medium">Standard</option>
           <option value="long">Detailed</option>
         </select>
-        <br>
+        <br />
+        <button id="explainbutton">EXPLAIN MY CODE</button>
+        <br />
+
         <button id="eli5button">EXPLAIN LIKE I'M 5</button>
-        <br>
+        <br />
+        <button id="explainfilebutton">EXPLAIN THIS ENTIRE FILE</button>
+        <br />
+
         <textarea
           id="output"
           placeholder="The way the program works is..."
         ></textarea>
-        <br>
+        <br />
         <button id="copybutton">COPY TO CLIPBOARD</button>
       </div>
     </div>
