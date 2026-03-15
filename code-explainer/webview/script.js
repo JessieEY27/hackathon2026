@@ -28,6 +28,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (message.command === "updateCode") {
       codeInput.value = message.code;
+      const lineCount = message.code ? message.code.split(/\r?\n/).length : 1;
+      const startInput = document.getElementById("range-start");
+      const endInput = document.getElementById("range-end");
+      if (startInput && endInput) {
+        startInput.max = String(lineCount);
+        endInput.max = String(lineCount);
+        startInput.value = "1";
+        endInput.value = String(lineCount);
+      }
     }
 
     if (message.command === "showExplanation") {

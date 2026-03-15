@@ -20,6 +20,11 @@ textarea {
   resize: vertical;
 }
 
+#codeinput {
+  min-height: 180px;
+  background-color: #f7f3ff;
+}
+
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr;

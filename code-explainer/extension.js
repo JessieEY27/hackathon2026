@@ -1,4 +1,6 @@
 const vscode = require("vscode");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Runs when the extension activates
@@ -24,7 +26,11 @@ function activate(context) {
         return;
       }
 
-      await sendToServer(selectedCode, "selection");
+      openExplainerPanel(context, {
+        code: selectedCode,
+        language: editor.document.languageId,
+        title: "Code Explanation - Selection"
+      });
     }
   );
 
@@ -45,7 +51,11 @@ function activate(context) {
         return;
       }
 
-      await sendToServer(fileContent, "file");
+      openExplainerPanel(context, {
+        code: fileContent,
+        language: editor.document.languageId,
+        title: "Code Explanation - File"
+      });
     }
   );
 
@@ -53,11 +63,113 @@ function activate(context) {
 }
 
 /**
- * Send code to backend server
- * @param {string} code
- * @param {string} mode
+ * Create and show the explainer webview
+ * @param {vscode.ExtensionContext} context
+ * @param {{code: string, language: string, title: string}} options
  */
-async function sendToServer(code, mode) {
+function openExplainerPanel(context, options) {
+  const panel = vscode.window.createWebviewPanel(
+    "codeExplainer",
+    options.title,
+    vscode.ViewColumn.Beside,
+    {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.file(path.join(context.extensionPath, "webview"))
+      ]
+    }
+  );
+
+  panel.webview.html = getWebviewHtml(context, panel.webview);
+
+  panel.webview.postMessage({
+    command: "updateCode",
+    code: options.code
+  });
+
+  panel.webview.onDidReceiveMessage(async (message) => {
+    if (!message || message.command !== "explainCode") return;
+
+    const rawCode = typeof message.code === "string" ? message.code : "";
+    const start = Number.isInteger(message.start) ? message.start : 1;
+    const end = Number.isInteger(message.end) ? message.end : start;
+    const length = typeof message.length === "string" ? message.length : undefined;
+    const mode = message.mode === "eli5" ? "eli5" : undefined;
+
+    const slicedCode = sliceLines(rawCode, start, end);
+
+    try {
+      const explanation = await sendToServer({
+        code: slicedCode,
+        language: options.language,
+        length,
+        mode
+      });
+
+      panel.webview.postMessage({
+        command: "showExplanation",
+        text: explanation
+      });
+    } catch (error) {
+      const errorMessage =
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "Unknown error";
+
+      vscode.window.showErrorMessage(
+        `Failed to get explanation from server: ${errorMessage}`
+      );
+    }
+  });
+}
+
+/**
+ * Build webview HTML with proper resource URIs
+ * @param {vscode.ExtensionContext} context
+ * @param {vscode.Webview} webview
+ * @returns {string}
+ */
+function getWebviewHtml(context, webview) {
+  const webviewDir = path.join(context.extensionPath, "webview");
+  const htmlPath = path.join(webviewDir, "index.html");
+  let html = fs.readFileSync(htmlPath, "utf8");
+
+  const cssUri = webview.asWebviewUri(
+    vscode.Uri.file(path.join(webviewDir, "style.css"))
+  );
+  const scriptUri = webview.asWebviewUri(
+    vscode.Uri.file(path.join(webviewDir, "script.js"))
+  );
+
+  html = html.replace('href="style.css"', `href="${cssUri}"`);
+  html = html.replace('src="script.js"', `src="${scriptUri}"`);
+
+  return html;
+}
+
+/**
+ * Extract a 1-based inclusive line range from a block of code.
+ * @param {string} code
+ * @param {number} start
+ * @param {number} end
+ * @returns {string}
+ */
+function sliceLines(code, start, end) {
+  const lines = code.split(/\r?\n/);
+  const safeStart = Math.max(1, Math.min(start, lines.length));
+  const safeEnd = Math.max(safeStart, Math.min(end, lines.length));
+  return lines.slice(safeStart - 1, safeEnd).join("\n");
+}
+
+/**
+ * Send code to backend server
+ * @param {{code: string, language?: string, mode?: string, length?: string}} payload
+ * @returns {Promise<string>}
+ */
+async function sendToServer(payload) {
   try {
     const response = await fetch("http://localhost:3000/explain", {
       method: "POST",
@@ -65,8 +177,10 @@ async function sendToServer(code, mode) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        selectedCode: code,
-        mode: mode
+        selectedCode: payload.code,
+        language: payload.language,
+        mode: payload.mode,
+        length: payload.length
       })
     });
 
@@ -103,89 +217,10 @@ async function sendToServer(code, mode) {
       explanation = data.explanation;
     }
 
-    showExplanationPanel(explanation, mode);
+    return explanation;
   } catch (error) {
-    const errorMessage =
-      error &&
-      typeof error === "object" &&
-      "message" in error &&
-      typeof error.message === "string"
-        ? error.message
-        : "Unknown error";
-
-    vscode.window.showErrorMessage(
-      `Failed to get explanation from server: ${errorMessage}`
-    );
+    throw error;
   }
-}
-
-/**
- * Show explanation in a webview panel
- * @param {string} text
- * @param {string} mode
- */
-function showExplanationPanel(text, mode) {
-  const title =
-    mode === "file" ? "Code Explanation - File" : "Code Explanation";
-
-  const panel = vscode.window.createWebviewPanel(
-    "codeExplanation",
-    title,
-    vscode.ViewColumn.Beside,
-    {
-      enableScripts: false
-    }
-  );
-
-  const escapedText = escapeHtml(text);
-
-  panel.webview.html = `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${title}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            line-height: 1.6;
-          }
-
-          h1 {
-            font-size: 20px;
-            margin-bottom: 16px;
-          }
-
-          pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: Consolas, monospace;
-            font-size: 14px;
-            padding: 12px;
-            border-radius: 8px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${title}</h1>
-        <pre>${escapedText}</pre>
-      </body>
-    </html>
-  `;
-}
-
-/**
- * Escape HTML before inserting into webview
- * @param {string} text
- * @returns {string}
- */
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function deactivate() {}
