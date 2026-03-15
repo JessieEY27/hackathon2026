@@ -4,10 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
     <div class="container">
       <div class="explaining">
+        <!-- Sliding Toggle -->
+        <div class="theme-switch">
+          <input type="checkbox" id="theme-toggle" />
+          <label for="theme-toggle" class="switch"></label>
+        </div>
+
         <h1>CODE EXPLAINER</h1>
+
         <label for="codeinput">Code to explain (read-only):</label>
         <textarea id="codeinput" readonly></textarea>
 
@@ -18,13 +26,16 @@
 
         Line End:
         <input type="number" id="range-end" value="1" min="1" max="100000" />
+
         <button id="explainbutton">EXPLAIN MY CODE</button>
+        <button id="explainfilebutton">EXPLAIN THIS FILE</button>
         <label for="length">Choose an explanation length</label>
         <select name="length" id="length">
           <option value="short">Short</option>
           <option value="medium">Medium</option>
           <option value="long">Long</option>
         </select>
+
         <button id="eli5button">EXPLAIN LIKE I'M 5</button>
 
         <textarea

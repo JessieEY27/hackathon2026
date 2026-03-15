@@ -42,31 +42,108 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
 }
 
-#explainbutton {
+/* Buttons */
+
+#explainbutton,
+#eli5button,
+#copybutton,
+#explainfilebutton {
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   background-color: #cbc3e3;
 }
 
-#explainbutton:hover {
+#explainbutton:hover,
+#eli5button:hover,
+#copybutton:hover,
+#explainfilebutton:hover {
   background-color: #aa98a9;
 }
 
-#eli5button {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  background-color: #cbc3e3;
+/* -------------------------- */
+/* Sliding Toggle Switch */
+/* -------------------------- */
+
+.theme-switch {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
-#eli5button:hover {
-  background-color: #aa98a9;
+.theme-switch input {
+  display: none;
 }
 
-#copybutton {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  background-color: #cbc3e3;
+.switch {
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  background: #cbc3e3;
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
-#copybutton:hover {
-  background-color: #aa98a9;
+.switch::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: white;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+/* when toggled */
+
+#theme-toggle:checked + .switch {
+  background: #5c4a72;
+}
+
+#theme-toggle:checked + .switch::after {
+  transform: translateX(22px);
+}
+
+/* -------------------------- */
+/* Dark Mode Styles */
+/* -------------------------- */
+
+body.dark {
+  background-color: #121018;
+  color: #43cdff;
+}
+
+body.dark h1 {
+  color: #68b4c2;
+}
+
+body.dark textarea {
+  background-color: #1b1824;
+  color: #6f8fcf;
+  border: 1px solid #2a2435;
+}
+
+body.dark #codeinput {
+  background-color: #1f1b2b;
+}
+
+body.dark #explainbutton,
+body.dark #eli5button,
+body.dark #copybutton,
+body.dark #explainfilebutton {
+  background-color: #3b3348;
+  color: #71b6de;
+  border: 1px solid #3b3348;
+}
+
+body.dark #explainbutton:hover,
+body.dark #eli5button:hover,
+body.dark #copybutton:hover,
+body.dark #explainfilebutton:hover {
+  background-color: #3a2f4a;
 }
