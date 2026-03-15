@@ -10,8 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:code-explainer.explainCode",
-    "onCommand:code-explainer.explainFile"
+    "onCommand:code-explainer.explainCode"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -19,10 +18,6 @@
       {
         "command": "code-explainer.explainCode",
         "title": "Code Explainer: Explain Code"
-      },
-      {
-        "command": "code-explainer.explainFile",
-        "title": "Code Explainer: Explain File"
       }
     ]
   },

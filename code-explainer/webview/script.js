@@ -3,27 +3,50 @@ const vscode = acquireVsCodeApi();
 
 window.addEventListener("DOMContentLoaded", () => {
   const explainButton = document.getElementById("explainbutton");
+  const explainFileButton = document.getElementById("explainfilebutton");
   const eli5Button = document.getElementById("eli5button");
   const codeInput = document.getElementById("codeinput");
+  const outputBox = document.getElementById("output");
+
   let fullCode = "";
 
   function sendCodeMessage(mode = "normal") {
-    const start = document.getElementById("range-start").value;
-    const end = document.getElementById("range-end").value;
-    const length = document.getElementById("length").value;
+    const startInput = document.getElementById("range-start");
+    const endInput = document.getElementById("range-end");
+    const lengthSelect = document.getElementById("length");
+
+    const start = startInput ? parseInt(startInput.value, 10) : 1;
+    const end = endInput ? parseInt(endInput.value, 10) : 1;
+    const length = lengthSelect ? lengthSelect.value : "short";
 
     vscode.postMessage({
       command: "explainCode",
-      code: codeInput.value,
-      start: parseInt(start, 10),
-      end: parseInt(end, 10),
-      length: length,
-      mode: mode,
+      code: fullCode,
+      start: Number.isFinite(start) ? start : 1,
+      end: Number.isFinite(end) ? end : 1,
+      length,
+      mode
     });
   }
 
-  explainButton.addEventListener("click", () => sendCodeMessage("normal"));
-  eli5Button.addEventListener("click", () => sendCodeMessage("eli5"));
+  function sendFileMessage() {
+    vscode.postMessage({
+      command: "explainFile",
+      code: fullCode
+    });
+  }
+
+  if (explainButton) {
+    explainButton.addEventListener("click", () => sendCodeMessage("normal"));
+  }
+
+  if (explainFileButton) {
+    explainFileButton.addEventListener("click", sendFileMessage);
+  }
+
+  if (eli5Button) {
+    eli5Button.addEventListener("click", () => sendCodeMessage("eli5"));
+  }
 
   window.addEventListener("message", (event) => {
     const message = event.data;
@@ -48,35 +71,62 @@ window.addEventListener("DOMContentLoaded", () => {
           : lineCount;
 
         startInput.value = String(
-          Math.max(1, Math.min(defaultStart, lineCount)),
+          Math.max(1, Math.min(defaultStart, lineCount))
         );
-        endInput.value = String(Math.max(1, Math.min(defaultEnd, lineCount)));
+        endInput.value = String(
+          Math.max(1, Math.min(defaultEnd, lineCount))
+        );
       }
 
       updateCodePreview();
     }
 
     if (message.command === "showExplanation") {
-      const outputBox = document.getElementById("output");
+      if (!outputBox) return;
 
-      if (outputBox) {
-        const rawText = typeof message.text === "string" ? message.text : "";
-        outputBox.value = rawText.replace(/\s*Bugs:\s*/i, "\n\nBugs: ");
-      }
+      const rawText = typeof message.text === "string" ? message.text : "";
+      const explanationType =
+        typeof message.explanationType === "string"
+          ? message.explanationType
+          : "code";
+
+      outputBox.value =
+        explanationType === "file"
+          ? formatFileExplanation(rawText)
+          : rawText;
     }
   });
 
-  const copyButton = document.getElementById("copybutton");
-  if (copyButton) {
-    copyButton.addEventListener("click", () => {
-      const outputBox = document.getElementById("output");
-      if (!outputBox) return;
+  function formatFileExplanation(text) {
+    if (!text) return "";
 
-      navigator.clipboard.writeText(outputBox.value);
+    let formatted = text.replace(/\r\n/g, "\n").trim();
 
-      copyButton.textContent = "COPIED!";
-      setTimeout(() => (copyButton.textContent = "COPY TO CLIPBOARD"), 1500);
-    });
+    formatted = formatted.replace(
+      /\s*(\d+\.\s+(What is this file\?|Main parts of this file|Key functionalities|How the structure works|Possible improvements|Summary))/gi,
+      "\n\n$1"
+    );
+
+    formatted = formatted.replace(
+      /\s*(What is this file\?|Main parts of this file|Key functionalities|How the structure works|Possible improvements|Summary)\s*:*/gi,
+      "\n\n$1"
+    );
+
+    formatted = formatted.replace(/\s•\s/g, "\n• ");
+    formatted = formatted.replace(/\s\*\s/g, "\n• ");
+    formatted = formatted.replace(/\s-\s/g, "\n- ");
+
+    formatted = formatted.replace(/([.!?])\s+(?=\d+\.\s)/g, "$1\n\n");
+
+    formatted = formatted.replace(
+      /(Main parts of this file|Key functionalities|Possible improvements)\s+/g,
+      "$1\n"
+    );
+
+    formatted = formatted.replace(/[ \t]+\n/g, "\n");
+    formatted = formatted.replace(/\n{3,}/g, "\n\n");
+
+    return formatted.trim();
   }
 
   function updateCodePreview() {
@@ -104,13 +154,29 @@ window.addEventListener("DOMContentLoaded", () => {
   const startInput = document.getElementById("range-start");
   const endInput = document.getElementById("range-end");
 
-  if (startInput) startInput.addEventListener("input", updateCodePreview);
-  if (endInput) endInput.addEventListener("input", updateCodePreview);
+  if (startInput) {
+    startInput.addEventListener("input", updateCodePreview);
+  }
 
-  /* --- Sliding Dark Mode Toggle --- */
+  if (endInput) {
+    endInput.addEventListener("input", updateCodePreview);
+  }
+
+  const copyButton = document.getElementById("copybutton");
+  if (copyButton) {
+    copyButton.addEventListener("click", () => {
+      if (!outputBox) return;
+
+      navigator.clipboard.writeText(outputBox.value);
+      copyButton.textContent = "COPIED!";
+
+      setTimeout(() => {
+        copyButton.textContent = "COPY TO CLIPBOARD";
+      }, 1500);
+    });
+  }
 
   const themeToggle = document.getElementById("theme-toggle");
-
   if (themeToggle) {
     const savedTheme = localStorage.getItem("codeExplainerTheme");
 
@@ -121,9 +187,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     themeToggle.addEventListener("change", () => {
       const isDark = themeToggle.checked;
-
       document.body.classList.toggle("dark", isDark);
-
       localStorage.setItem("codeExplainerTheme", isDark ? "dark" : "light");
     });
   }
