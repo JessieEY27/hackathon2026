@@ -46,10 +46,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (message.command === "showExplanation") {
       const outputBox = document.getElementById("output");
-      if (outputBox) {
-        const rawText = typeof message.text === "string" ? message.text : "";
-        outputBox.value = rawText.replace(/\s*Bugs:\s*/i, "\n\nBugs: ");
-      }
+      if (outputBox) outputBox.value = message.text;
     }
   });
 
