@@ -1,12 +1,18 @@
 body {
   background-color: lavender;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  color: #000;
+  margin: 0;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
 }
 
 h1 {
   font-style: oblique;
   color: plum;
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  text-align: center;
 }
 
 textarea {
@@ -27,8 +33,9 @@ textarea {
 
 .container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 60px;
+  grid-template-columns: 1fr;
+  width: min(920px, 100%);
+  margin: 0 auto;
 }
 
 .explaining {
