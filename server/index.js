@@ -6,28 +6,46 @@ const { explainWithGroq } = require('./groqClient');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const REQUIRED_ENV = ['GROQ_API_KEY'];
+
+// Fail fast if required env vars are missing
+const missingEnv = REQUIRED_ENV.filter((key) => !process.env[key]);
+if (missingEnv.length > 0) {
+  console.error(`Missing required env vars: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
 
 // CORS and JSON parsing for webview requests
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-// Basic guardrails for input validation
-const DISALLOWED_LANGUAGES = new Set(['plaintext', 'text', 'markdown']);
+// Input size limit for selected code
 const MAX_CODE_CHARS = 20000;
-const ALLOWED_LENGTHS = new Set(['short', 'medium', 'long']);
 
-// Quick heuristic to block empty/gibberish input
-function looksLikeCode(text) {
-  const trimmed = text.trim();
-  if (!trimmed) return false;
+// Rate limiting (simple in-memory)
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30;
+const rateWindow = new Map();
 
-  const hasLetters = /[A-Za-z]/.test(trimmed);
-  if (!hasLetters) return false;
+function rateLimit(req, res, next) {
+  const key = req.ip || 'unknown';
+  const now = Date.now();
+  const entry = rateWindow.get(key) || { count: 0, windowStart: now };
 
-  const hasCodePunct = /[{}()[\];=<>]/.test(trimmed);
-  if (trimmed.length < 6 && !hasCodePunct) return false;
+  if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    entry.count = 0;
+    entry.windowStart = now;
+  }
 
-  return true;
+  entry.count += 1;
+  rateWindow.set(key, entry);
+
+  if (entry.count > RATE_LIMIT_MAX) {
+    res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many requests. Please slow down.' } });
+    return;
+  }
+
+  next();
 }
 
 // Consistent error format for the client
@@ -45,12 +63,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Lightweight health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+// Lightweight server status check
+app.get('/serverstatus', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Server is running and ready to accept requests.',
+    uptimeSec: Math.floor(process.uptime()),
+    time: new Date().toISOString()
+  });
 });
 
-app.post('/explain', async (req, res) => {
+app.post('/explain', rateLimit, async (req, res) => {
   try {
     const { selectedCode, language, mode, length } = req.body || {};
 
@@ -64,35 +87,13 @@ app.post('/explain', async (req, res) => {
       return;
     }
 
-    if (!language || typeof language !== 'string' || !language.trim()) {
-      errorResponse(res, 400, 'MISSING_LANGUAGE', 'language is required.');
-      return;
-    }
-
-    const normalizedLanguage = language.trim().toLowerCase();
-    if (DISALLOWED_LANGUAGES.has(normalizedLanguage)) {
-      errorResponse(res, 400, 'INVALID_LANGUAGE', 'language must be a programming language.');
-      return;
-    }
-
-    if (!looksLikeCode(selectedCode)) {
-      errorResponse(res, 400, 'INVALID_CODE', 'selectedCode does not look like valid code.');
-      return;
-    }
-
     if (mode && mode !== 'eli5') {
       errorResponse(res, 400, 'INVALID_MODE', 'mode must be "eli5" if provided.');
       return;
     }
 
-    if (length && !ALLOWED_LENGTHS.has(length)) {
+    if (length && !['short', 'medium', 'long'].includes(length)) {
       errorResponse(res, 400, 'INVALID_LENGTH', 'length must be short, medium, or long if provided.');
-      return;
-    }
-
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) {
-      errorResponse(res, 500, 'MISSING_API_KEY', 'Server missing GROQ_API_KEY.');
       return;
     }
 
@@ -100,9 +101,8 @@ app.post('/explain', async (req, res) => {
     const temperature = process.env.GROQ_TEMPERATURE ? Number(process.env.GROQ_TEMPERATURE) : 0.2;
     const maxTokens = process.env.GROQ_MAX_TOKENS ? Number(process.env.GROQ_MAX_TOKENS) : 512;
 
-    // goes to groqClient.js for Groq prompt and validates Groq response
     const explanation = await explainWithGroq({
-      apiKey,
+      apiKey: process.env.GROQ_API_KEY,
       model,
       temperature,
       maxTokens,
