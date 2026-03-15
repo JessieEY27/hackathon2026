@@ -1,65 +1,67 @@
-# code-explainer README
+Code Explainer (AI)
 
-This is the README for your extension "code-explainer". After writing up a brief description, we recommend including the following sections.
+Explain highlighted code or line ranges directly inside VS Code using an AI backend.
 
-## Features
+Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Explain selected code or entire files
+Choose explanation length (short / medium / long)
+“Explain like I’m 5” mode
+Line range inputs with live preview
+Copy explanation to clipboard
+Manual dark‑mode toggle in the webview
+Demo
+Add screenshots or a short GIF here
 
-For example if there is an image subfolder under your extension project workspace:
+Requirements
 
-\!\[feature X\]\(images/feature-x.png\)
+Node.js
+A Groq API key (GROQ_API_KEY)
+Local server running (see setup below)
+Setup
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Start the server
+Open a terminal in: C:\Users\Kenny\OneDrive\CST\hackathon2026\server
+Run npm install
+Set GROQ_API_KEY=your_key_here
+Run npm run dev
+The server runs at http://localhost:3000
 
-## Requirements
+Run the extension
+Open C:\Users\Kenny\OneDrive\CST\hackathon2026\code-explainer in VS Code and press F5.
+Usage
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Highlight code in your editor.
+Run:
+Code Explainer: Explain Code for selection, or
+Code Explainer: Explain File for entire file.
+Adjust line range (optional).
+Click EXPLAIN MY CODE or EXPLAIN LIKE I’M 5.
+Commands
 
-## Extension Settings
+Code Explainer: Explain Code
+Code Explainer: Explain File
+Validation Rules
+The server returns 400 if:
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+selectedCode is missing or whitespace
+language is missing or is plaintext, text, or markdown
+selection looks like gibberish (too short or no letters)
+Rate limiting is enabled (30 requests/minute per IP).
 
-For example:
+Environment Variables
 
-This extension contributes the following settings:
+GROQ_API_KEY (required)
+GROQ_MODEL (optional, default: llama-3.3-70b-versatile)
+GROQ_TEMPERATURE (optional, default: 0.2)
+GROQ_MAX_TOKENS (optional, default: 512)
+GROQ_TIMEOUT_MS (optional, default: 20000 server-side)
+Packaging (.vsix)
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Open terminal in C:\Users\Kenny\OneDrive\CST\hackathon2026\code-explainer
+Run vsce package
+Troubleshooting
 
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Extension manifest not found: run vsce package inside the code-explainer folder.
+No response: ensure the server is running and GROQ_API_KEY is set.
+Red underline in webview JS: add // @ts-nocheck at the top of script.js if needed.
