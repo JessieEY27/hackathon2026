@@ -14,7 +14,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     vscode.postMessage({
       command: "explainCode",
-      code: codeInput.value, // readonly, populated by VS Code
+      code: codeInput.value,
       start: parseInt(start, 10),
       end: parseInt(end, 10),
       length: length,
@@ -31,21 +31,34 @@ window.addEventListener("DOMContentLoaded", () => {
     if (message.command === "updateCode") {
       fullCode = message.code || "";
       const lineCount = fullCode ? fullCode.split(/\r?\n/).length : 1;
+
       const startInput = document.getElementById("range-start");
       const endInput = document.getElementById("range-end");
+
       if (startInput && endInput) {
         startInput.max = String(lineCount);
         endInput.max = String(lineCount);
-        const defaultStart = Number.isInteger(message.startLine) ? message.startLine : 1;
-        const defaultEnd = Number.isInteger(message.endLine) ? message.endLine : lineCount;
-        startInput.value = String(Math.max(1, Math.min(defaultStart, lineCount)));
+
+        const defaultStart = Number.isInteger(message.startLine)
+          ? message.startLine
+          : 1;
+
+        const defaultEnd = Number.isInteger(message.endLine)
+          ? message.endLine
+          : lineCount;
+
+        startInput.value = String(
+          Math.max(1, Math.min(defaultStart, lineCount)),
+        );
         endInput.value = String(Math.max(1, Math.min(defaultEnd, lineCount)));
       }
+
       updateCodePreview();
     }
 
     if (message.command === "showExplanation") {
       const outputBox = document.getElementById("output");
+
       if (outputBox) {
         const rawText = typeof message.text === "string" ? message.text : "";
         outputBox.value = rawText.replace(/\s*Bugs:\s*/i, "\n\nBugs: ");
@@ -58,6 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
     copyButton.addEventListener("click", () => {
       const outputBox = document.getElementById("output");
       if (!outputBox) return;
+
       navigator.clipboard.writeText(outputBox.value);
 
       copyButton.textContent = "COPIED!";
@@ -67,12 +81,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function updateCodePreview() {
     if (!codeInput) return;
+
     const startInput = document.getElementById("range-start");
     const endInput = document.getElementById("range-end");
     if (!startInput || !endInput) return;
 
     const start = parseInt(startInput.value, 10);
     const end = parseInt(endInput.value, 10);
+
     if (!Number.isFinite(start) || !Number.isFinite(end)) return;
 
     codeInput.value = sliceLines(fullCode, start, end);
@@ -87,6 +103,28 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const startInput = document.getElementById("range-start");
   const endInput = document.getElementById("range-end");
+
   if (startInput) startInput.addEventListener("input", updateCodePreview);
   if (endInput) endInput.addEventListener("input", updateCodePreview);
+
+  /* --- Sliding Dark Mode Toggle --- */
+
+  const themeToggle = document.getElementById("theme-toggle");
+
+  if (themeToggle) {
+    const savedTheme = localStorage.getItem("codeExplainerTheme");
+
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark");
+      themeToggle.checked = true;
+    }
+
+    themeToggle.addEventListener("change", () => {
+      const isDark = themeToggle.checked;
+
+      document.body.classList.toggle("dark", isDark);
+
+      localStorage.setItem("codeExplainerTheme", isDark ? "dark" : "light");
+    });
+  }
 });
