@@ -14,6 +14,10 @@
     "onCommand:code-explainer.explainFile"
   ],
   "main": "./extension.js",
+  "files": [
+    "extension.js",
+    "webview/**"
+  ],
   "contributes": {
     "commands": [
       {
