@@ -2,6 +2,8 @@ const vscode = require("vscode");
 const fs = require("fs");
 const path = require("path");
 
+let explainerPanel = null;
+
 /**
  * Runs when the extension activates
  * @param {vscode.ExtensionContext} context
@@ -38,7 +40,7 @@ function activate(context) {
         selectionEnd -= 1;
       }
 
-      openExplainerPanel(context, {
+      explainerPanel = openExplainerPanel(context, {
         code: fullFileCode,
         language: editor.document.languageId,
         title: "Code Explanation",
@@ -48,7 +50,38 @@ function activate(context) {
     }
   );
 
-  context.subscriptions.push(explainCodeCommand);
+  const selectionListener = vscode.window.onDidChangeTextEditorSelection(
+    (event) => {
+      if (!explainerPanel) return;
+      if (!event || !event.textEditor) return;
+
+      const editor = event.textEditor;
+      const selection = editor.selection;
+      const selectedCode = editor.document.getText(selection);
+
+      if (!selectedCode || selectedCode.trim() === "") return;
+
+      const fullFileCode = editor.document.getText();
+      const selectionStart = selection.start.line + 1;
+      let selectionEnd = selection.end.line + 1;
+
+      if (
+        selection.end.character === 0 &&
+        selection.end.line > selection.start.line
+      ) {
+        selectionEnd -= 1;
+      }
+
+      explainerPanel.webview.postMessage({
+        command: "updateCode",
+        code: fullFileCode,
+        startLine: selectionStart,
+        endLine: selectionEnd
+      });
+    }
+  );
+
+  context.subscriptions.push(explainCodeCommand, selectionListener);
 }
 
 /**
@@ -57,6 +90,18 @@ function activate(context) {
  * @param {{code: string, language: string, title: string, startLine?: number, endLine?: number}} options
  */
 function openExplainerPanel(context, options) {
+  if (explainerPanel) {
+    explainerPanel.title = options.title;
+    explainerPanel.webview.postMessage({
+      command: "updateCode",
+      code: options.code,
+      startLine: options.startLine,
+      endLine: options.endLine
+    });
+    explainerPanel.reveal(vscode.ViewColumn.Beside);
+    return explainerPanel;
+  }
+
   const panel = vscode.window.createWebviewPanel(
     "codeExplainer",
     options.title,
@@ -148,6 +193,13 @@ function openExplainerPanel(context, options) {
       );
     }
   });
+
+  panel.onDidDispose(() => {
+    explainerPanel = null;
+  });
+
+  explainerPanel = panel;
+  return explainerPanel;
 }
 
 /**
