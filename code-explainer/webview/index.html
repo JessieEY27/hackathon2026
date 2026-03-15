@@ -17,32 +17,34 @@
 
         <label for="codeinput">Code to explain (read-only):</label>
         <textarea id="codeinput" readonly></textarea>
-
-        <label for="range-start">Or select range of lines to explain:</label>
-
+        <br>
+        <label for="range-start">Or select range of lines to explain</label>
+        <!-- <br> -->
         Line Start:
         <input type="number" id="range-start" value="1" min="1" max="100000" />
 
         Line End:
         <input type="number" id="range-end" value="1" min="1" max="100000" />
-
+        <br>
         <button id="explainbutton">EXPLAIN MY CODE</button>
+        <br>
         <button id="explainfilebutton">EXPLAIN THIS FILE</button>
+        <br>
 
-        <label for="length">Choose an explanation length</label>
+        <label for="length">Choose an explanation type:</label>
         <select name="length" id="length">
-          <option value="short">Short</option>
-          <option value="medium">Medium</option>
-          <option value="long">Long</option>
+          <option value="short">Quick</option>
+          <option value="medium">Standard</option>
+          <option value="long">Detailed</option>
         </select>
-
+        <br>
         <button id="eli5button">EXPLAIN LIKE I'M 5</button>
-
+        <br>
         <textarea
           id="output"
-          placeholder="Here is the explanation..."
+          placeholder="The way the program works is..."
         ></textarea>
-
+        <br>
         <button id="copybutton">COPY TO CLIPBOARD</button>
       </div>
     </div>
